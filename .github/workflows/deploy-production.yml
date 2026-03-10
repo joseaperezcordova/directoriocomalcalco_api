@@ -43,6 +43,7 @@ jobs:
           sudo apt-get install -y lftp
           lftp -e "
             set ftp:passive-mode yes;
+            set ssl:verify-certificate no;
             open -u ${{ secrets.FTP_USERNAME_PROD }},${{ secrets.FTP_PASSWORD_PROD }} ${{ secrets.FTP_SERVER_PROD }};
             cd ${{ secrets.FTP_SERVER_DIR_PROD }};
             chmod 644 .htaccess;
