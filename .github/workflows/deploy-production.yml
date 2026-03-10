@@ -28,7 +28,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME_PROD }}
           password: ${{ secrets.FTP_PASSWORD_PROD }}
           server-dir: ${{ secrets.FTP_SERVER_DIR_PROD }}
-          passive: false
+          passive: true
           exclude: |
             **/.git*
             **/.git*/**
