@@ -38,3 +38,15 @@ jobs:
             .env
             .env.*
             !.env.example
+
+      - name: Fix permisos .htaccess via FTP
+        run: |
+          sudo apt-get install -y lftp
+          lftp -e "
+            set ftp:passive-mode yes;
+            open -u ${{ secrets.FTP_USERNAME_PROD }},${{ secrets.FTP_PASSWORD_PROD }} ${{ secrets.FTP_SERVER_PROD }};
+            cd ${{ secrets.FTP_SERVER_DIR_PROD }};
+            chmod 644 .htaccess;
+            chmod 644 public/.htaccess;
+            quit
+          "
