@@ -2,34 +2,49 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
+use App\Models\TokenSesion;
 use Closure;
 use Illuminate\Http\Request;
 
 class AuthToken
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next, string $rolRequerido = null)
     {
-        $token = $request->bearerToken();
+        // Aceptar token en header Authorization: Bearer xxx  o  X-Auth-Token: xxx
+        $token = null;
+
+        if ($auth = $request->header('Authorization')) {
+            $token = str_replace('Bearer ', '', $auth);
+        } elseif ($xToken = $request->header('X-Auth-Token')) {
+            $token = $xToken;
+        }
 
         if (!$token) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token requerido',
-            ], 401);
+            return response()->json(['message' => 'Token requerido'], 401);
         }
 
-        $user = User::where('remember_token', $token)->first();
+        $sesion = TokenSesion::with('usuario')
+            ->where('token', $token)
+            ->where('expira_en', '>', now())
+            ->first();
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token inválido o sesión expirada',
-            ], 401);
+        if (!$sesion || !$sesion->usuario) {
+            return response()->json(['message' => 'Token inválido o expirado'], 401);
         }
 
-        // Pasar el usuario al request para usarlo en los controladores
-        $request->attributes->set('auth_user', $user);
+        $usuario = $sesion->usuario;
+
+        if (!$usuario->activo) {
+            return response()->json(['message' => 'Usuario inactivo'], 403);
+        }
+
+        // Verificar rol si se especificó
+        if ($rolRequerido && $usuario->rol !== $rolRequerido) {
+            return response()->json(['message' => 'Sin permisos suficientes'], 403);
+        }
+
+        // Pasar usuario al request para usarlo en los controladores
+        $request->attributes->set('_usuario', $usuario);
 
         return $next($request);
     }

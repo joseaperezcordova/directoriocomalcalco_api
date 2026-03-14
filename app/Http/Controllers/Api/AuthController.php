@@ -3,82 +3,70 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Usuario;
+use App\Models\TokenSesion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    /**
-     * Login - recibe email y password, devuelve token y datos del usuario
-     */
+    // POST /api/auth/login
     public function login(Request $request)
     {
         $request->validate([
             'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $usuario = Usuario::where('email', $request->email)
+            ->where('activo', true)
+            ->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Credenciales incorrectas',
-            ], 401);
+        if (!$usuario || !password_verify($request->password, $usuario->password)) {
+            return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
-        // Generar token y guardarlo en remember_token
-        $token = Str::random(60);
-        $user->remember_token = $token;
-        $user->save();
+        // Generar token
+        $token = Str::random(64);
+
+        TokenSesion::create([
+            'usuario_id' => $usuario->id,
+            'token'      => $token,
+            'expira_en'  => now()->addDays(30),
+        ]);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Login exitoso',
-            'token'   => $token,
-            'user'    => [
-                'id'             => $user->id,
-                'name'           => $user->name,
-                'email'          => $user->email,
-                'rol'            => $user->rol,
-                'id_punto_venta' => $user->id_punto_venta,
+            'token' => $token,
+            'usuario' => [
+                'id'     => $usuario->id,
+                'nombre' => $usuario->nombre,
+                'email'  => $usuario->email,
+                'rol'    => $usuario->rol,
             ],
         ]);
     }
 
-    /**
-     * Logout - borra el token del usuario
-     */
+    // POST /api/auth/logout
     public function logout(Request $request)
     {
-        $user = $request->attributes->get('auth_user');
-        $user->remember_token = null;
-        $user->save();
+        $token = $request->header('Authorization')
+            ? str_replace('Bearer ', '', $request->header('Authorization'))
+            : $request->header('X-Auth-Token');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Sesión cerrada',
-        ]);
+        TokenSesion::where('token', $token)->delete();
+
+        return response()->json(['message' => 'Sesión cerrada']);
     }
 
-    /**
-     * Devuelve los datos del usuario autenticado
-     */
-    public function user(Request $request)
+    // GET /api/auth/me
+    public function me(Request $request)
     {
-        $user = $request->attributes->get('auth_user');
-
+        $usuario = $request->get('_usuario');
         return response()->json([
-            'success' => true,
-            'user'    => [
-                'id'             => $user->id,
-                'name'           => $user->name,
-                'email'          => $user->email,
-                'rol'            => $user->rol,
-                'id_punto_venta' => $user->id_punto_venta,
-            ],
+            'id'     => $usuario->id,
+            'nombre' => $usuario->nombre,
+            'email'  => $usuario->email,
+            'rol'    => $usuario->rol,
         ]);
     }
 }
