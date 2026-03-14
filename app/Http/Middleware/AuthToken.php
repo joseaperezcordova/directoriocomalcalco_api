@@ -25,7 +25,7 @@ class AuthToken
 
         $sesion = TokenSesion::with('usuario')
             ->where('token', $token)
-            ->where('expira_en', '>', now())
+            ->where('expira_at', '>', now())
             ->first();
 
         if (!$sesion || !$sesion->usuario) {

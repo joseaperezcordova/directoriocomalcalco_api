@@ -11,11 +11,11 @@ class TokenSesion extends Model
     protected $fillable = [
         'usuario_id',
         'token',
-        'expira_en',
+        'expira_at',
     ];
 
     protected $casts = [
-        'expira_en' => 'datetime',
+        'expira_at' => 'datetime',
     ];
 
     public function usuario()

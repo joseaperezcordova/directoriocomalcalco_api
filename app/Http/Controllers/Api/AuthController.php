@@ -35,7 +35,7 @@ class AuthController extends Controller
         TokenSesion::create([
             'usuario_id' => $usuario->id,
             'token'      => $token,
-            'expira_en'  => now()->addDays(30),
+            'expira_at'  => now()->addDays(30),
         ]);
 
         return response()->json([
