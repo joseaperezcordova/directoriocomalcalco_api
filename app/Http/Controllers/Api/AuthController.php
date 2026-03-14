@@ -14,11 +14,14 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $usuario = Usuario::where('email', $request->email)
+        $usuario = Usuario::where(function ($q) use ($request) {
+                $q->where('username', $request->username)
+                  ->orWhere('email', $request->username);
+            })
             ->where('activo', true)
             ->first();
 
