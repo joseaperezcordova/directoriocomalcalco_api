@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categoria;
 use App\Models\Negocio;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
@@ -85,5 +86,53 @@ class AdminController extends Controller
         $usuario->update(['activo' => false]);
 
         return response()->json(['message' => 'Usuario desactivado']);
+    }
+
+    // GET /api/admin/categorias
+    public function categorias()
+    {
+        $categorias = Categoria::orderBy('nombre')->get(['id', 'nombre', 'icono', 'activo']);
+        return response()->json($categorias);
+    }
+
+    // POST /api/admin/categorias
+    public function crearCategoria(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:100',
+            'icono'  => 'nullable|string|max:50',
+        ]);
+
+        $categoria = Categoria::create([
+            'nombre' => $request->nombre,
+            'icono'  => $request->icono,
+            'activo' => true,
+        ]);
+
+        return response()->json($categoria, 201);
+    }
+
+    // PUT /api/admin/categorias/{id}
+    public function editarCategoria(Request $request, $id)
+    {
+        $categoria = Categoria::findOrFail($id);
+
+        $request->validate([
+            'nombre' => 'sometimes|required|string|max:100',
+            'icono'  => 'nullable|string|max:50',
+        ]);
+
+        $categoria->update($request->only(['nombre', 'icono']));
+
+        return response()->json($categoria);
+    }
+
+    // PATCH /api/admin/categorias/{id}/toggle
+    public function toggleCategoria($id)
+    {
+        $categoria = Categoria::findOrFail($id);
+        $categoria->update(['activo' => !$categoria->activo]);
+
+        return response()->json(['id' => $categoria->id, 'activo' => $categoria->activo]);
     }
 }

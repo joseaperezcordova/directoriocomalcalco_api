@@ -8,7 +8,7 @@ class Categoria extends Model
 {
     protected $table = 'categorias';
 
-    protected $fillable = ['nombre', 'icono'];
+    protected $fillable = ['nombre', 'icono', 'activo'];
 
     public function negocios()
     {

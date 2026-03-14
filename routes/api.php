@@ -51,5 +51,10 @@ Route::middleware('auth.token')->group(function () {
         Route::post('/usuarios', [AdminController::class, 'crearUsuario']);
         Route::put('/usuarios/{id}', [AdminController::class, 'editarUsuario']);
         Route::delete('/usuarios/{id}', [AdminController::class, 'desactivarUsuario']);
+
+        Route::get('/categorias', [AdminController::class, 'categorias']);
+        Route::post('/categorias', [AdminController::class, 'crearCategoria']);
+        Route::put('/categorias/{id}', [AdminController::class, 'editarCategoria']);
+        Route::patch('/categorias/{id}/toggle', [AdminController::class, 'toggleCategoria']);
     });
 });
