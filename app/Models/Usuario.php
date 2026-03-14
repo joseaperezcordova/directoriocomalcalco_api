@@ -10,6 +10,7 @@ class Usuario extends Authenticatable
 
     protected $fillable = [
         'nombre',
+        'username',
         'email',
         'password',
         'rol',       // admin | capturista
