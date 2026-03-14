@@ -17,13 +17,32 @@ class NegocioPublicoController extends Controller
     }
 
     // GET /api/negocios
-    // Parámetros opcionales: q, categoria_id, domicilio, abierto
+    // Parámetros opcionales: q, categoria_id, domicilio, lat, lng, radio (km, default 5)
     public function index(Request $request)
     {
-        $query = Negocio::with(['categoria', 'horarios'])
-            ->publicos()
-            ->orderByRaw("FIELD(plan, 'premium', 'basico', 'gratis')")
-            ->orderBy('nombre');
+        $lat   = $request->get('lat');
+        $lng   = $request->get('lng');
+        $radio = (float) ($request->get('radio', 5));
+        $usarGeo = is_numeric($lat) && is_numeric($lng);
+
+        if ($usarGeo) {
+            // Haversine en MySQL — incluye distancia_km en cada fila
+            $haversine = '(6371 * ACOS(
+                COS(RADIANS(?)) * COS(RADIANS(lat)) * COS(RADIANS(lng) - RADIANS(?)) +
+                SIN(RADIANS(?)) * SIN(RADIANS(lat))
+            ))';
+
+            $query = Negocio::with(['categoria', 'horarios'])
+                ->publicos()
+                ->selectRaw("negocios.*, {$haversine} AS distancia_km", [(float)$lat, (float)$lng, (float)$lat])
+                ->having('distancia_km', '<=', $radio)
+                ->orderBy('distancia_km');
+        } else {
+            $query = Negocio::with(['categoria', 'horarios'])
+                ->publicos()
+                ->orderByRaw("FIELD(plan, 'premium', 'basico', 'gratis')")
+                ->orderBy('nombre');
+        }
 
         // Búsqueda por texto
         if ($q = $request->get('q')) {
