@@ -151,8 +151,13 @@ class NegocioCapturaController extends Controller
     // POST /api/admin/negocios/{id}/aprobar
     public function aprobar(Request $request, $id)
     {
+        $usuario = $request->get('_usuario');
         $negocio = Negocio::findOrFail($id);
-        $negocio->update(['estado' => 'aprobado']);
+        $negocio->update([
+            'estado'      => 'aprobado',
+            'aprobado_por' => $usuario->id,
+            'aprobado_at'  => now(),
+        ]);
 
         return response()->json(['message' => 'Negocio aprobado', 'negocio' => $negocio]);
     }

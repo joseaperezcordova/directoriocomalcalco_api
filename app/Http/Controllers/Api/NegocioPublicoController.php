@@ -12,7 +12,7 @@ class NegocioPublicoController extends Controller
     // GET /api/categorias
     public function categorias()
     {
-        $categorias = Categoria::orderBy('nombre')->get(['id', 'nombre', 'icono']);
+        $categorias = Categoria::where('activo', 1)->orderBy('nombre')->get(['id', 'nombre', 'icono']);
         return response()->json($categorias);
     }
 

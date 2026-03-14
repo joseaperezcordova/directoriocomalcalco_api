@@ -27,6 +27,8 @@ class Negocio extends Model
         'estado',
         'motivo_rechazo',
         'capturado_por',
+        'aprobado_por',
+        'aprobado_at',
     ];
 
     protected $casts = [

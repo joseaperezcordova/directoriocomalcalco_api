@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use App\Models\TokenSesion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -25,7 +26,7 @@ class AuthController extends Controller
             ->where('activo', true)
             ->first();
 
-        if (!$usuario || !password_verify($request->password, $usuario->password)) {
+        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
@@ -41,10 +42,11 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'usuario' => [
-                'id'     => $usuario->id,
-                'nombre' => $usuario->nombre,
-                'email'  => $usuario->email,
-                'rol'    => $usuario->rol,
+                'id'       => $usuario->id,
+                'nombre'   => $usuario->nombre,
+                'username' => $usuario->username,
+                'email'    => $usuario->email,
+                'rol'      => $usuario->rol,
             ],
         ]);
     }
@@ -61,15 +63,36 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada']);
     }
 
+    // POST /api/auth/change-password
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'password_actual' => 'required|string',
+            'password_nuevo'  => 'required|string|min:6',
+        ]);
+
+        $usuario = $request->get('_usuario');
+
+        if (!Hash::check($request->password_actual, $usuario->password)) {
+            return response()->json(['message' => 'La contraseña actual es incorrecta'], 422);
+        }
+
+        $usuario->password = Hash::make($request->password_nuevo);
+        $usuario->save();
+
+        return response()->json(['message' => 'Contraseña actualizada']);
+    }
+
     // GET /api/auth/me
     public function me(Request $request)
     {
         $usuario = $request->get('_usuario');
         return response()->json([
-            'id'     => $usuario->id,
-            'nombre' => $usuario->nombre,
-            'email'  => $usuario->email,
-            'rol'    => $usuario->rol,
+            'id'       => $usuario->id,
+            'nombre'   => $usuario->nombre,
+            'username' => $usuario->username,
+            'email'    => $usuario->email,
+            'rol'      => $usuario->rol,
         ]);
     }
 }

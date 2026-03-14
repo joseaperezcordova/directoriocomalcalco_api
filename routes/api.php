@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NegocioPublicoController;
 use App\Http\Controllers\Api\NegocioCapturaController;
+use App\Http\Controllers\Api\AdminController;
 
 // =====================================================
 // RUTAS PÚBLICAS (sin autenticación)
@@ -28,6 +29,7 @@ Route::middleware('auth.token')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
     // Captura — capturistas y admin
     Route::prefix('captura')->group(function () {
@@ -42,5 +44,12 @@ Route::middleware('auth.token')->group(function () {
         Route::post('/negocios/{id}/aprobar', [NegocioCapturaController::class, 'aprobar']);
         Route::post('/negocios/{id}/rechazar', [NegocioCapturaController::class, 'rechazar']);
         Route::get('/stats', [NegocioCapturaController::class, 'stats']);
+
+        Route::get('/negocios', [AdminController::class, 'negocios']);
+
+        Route::get('/usuarios', [AdminController::class, 'usuarios']);
+        Route::post('/usuarios', [AdminController::class, 'crearUsuario']);
+        Route::put('/usuarios/{id}', [AdminController::class, 'editarUsuario']);
+        Route::delete('/usuarios/{id}', [AdminController::class, 'desactivarUsuario']);
     });
 });
