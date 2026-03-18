@@ -71,12 +71,15 @@ class NegocioPublicoController extends Controller
         $sur   = $request->get('sur');
         $este  = $request->get('este');
         $oeste = $request->get('oeste');
-        if (is_numeric($norte) && is_numeric($sur) && is_numeric($este) && is_numeric($oeste)) {
+        $usarViewport = is_numeric($norte) && is_numeric($sur) && is_numeric($este) && is_numeric($oeste);
+        if ($usarViewport) {
             $query->whereBetween('lat', [(float)$sur,  (float)$norte])
                   ->whereBetween('lng', [(float)$oeste, (float)$este]);
         }
 
-        $negocios = $query->paginate(20);
+        // Con viewport: devolver todos los del área (sin paginar)
+        // Sin viewport: paginar normalmente
+        $negocios = $usarViewport ? $query->get() : $query->paginate(20);
 
         return response()->json($negocios);
     }
