@@ -66,6 +66,16 @@ class NegocioPublicoController extends Controller
             $query->where('servicio_domicilio', true);
         }
 
+        // Filtro por viewport (bounding box del mapa)
+        $norte = $request->get('norte');
+        $sur   = $request->get('sur');
+        $este  = $request->get('este');
+        $oeste = $request->get('oeste');
+        if (is_numeric($norte) && is_numeric($sur) && is_numeric($este) && is_numeric($oeste)) {
+            $query->whereBetween('lat', [(float)$sur,  (float)$norte])
+                  ->whereBetween('lng', [(float)$oeste, (float)$este]);
+        }
+
         $negocios = $query->paginate(20);
 
         return response()->json($negocios);
